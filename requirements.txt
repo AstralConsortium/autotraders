@@ -1,3 +1,4 @@
 pyrate-limiter>3.0.0
 pydantic>=2.0.0
 httpx[http2]>=0.19.0
+pytest_httpx==0.29.0

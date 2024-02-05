@@ -35,7 +35,7 @@ class AutoTradersSession(Client):
                 acquired = True
             except BucketFullException:
                 try:
-                    self.limiter.try_acquire(url)
+                    self.burst_limiter.try_acquire(url)
                     acquired = True
                 except BucketFullException:
                     time.sleep(self.rate_limiter_sleep_time)
