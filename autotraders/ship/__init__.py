@@ -22,7 +22,7 @@ from autotraders.ship.fuel import Fuel
 from autotraders.ship.fuel import Fuel
 from autotraders.ship.nav import Nav
 from autotraders.ship.ship_components import Frame, Reactor, Engine, Module, Mount
-from autotraders.ship.states import FlightMode
+from autotraders.ship.states import FlightMode, NavState
 from autotraders.ship.survey import Survey
 from autotraders.space_traders_entity import SpaceTradersEntity
 
@@ -149,12 +149,18 @@ class Ship(SpaceTradersEntity):
         """Attempts to move ship to the provided waypoint.
         If the request succeeds, this function exits immediately, and does not wait the ship to arrive.
         """
+        if self.nav.status != NavState.IN_ORBIT:
+            self.orbit()
         self.fuel = self.nav.navigate(WaypointSymbol(waypoint))
 
     def jump(self, destination: Union[str, MapSymbol]):
+        if self.nav.status != NavState.IN_ORBIT:
+            self.orbit()
         self.cooldown = self.nav.jump(destination)
 
     def warp(self, destination: Union[str, MapSymbol]):
+        if self.nav.status != NavState.IN_ORBIT:
+            self.orbit()
         self.fuel = self.nav.warp(destination)
 
     def patch_navigation(self, new_flight_mode: Union[str, FlightMode]):
@@ -167,6 +173,8 @@ class Ship(SpaceTradersEntity):
         self.nav.orbit()
 
     def extract(self, extraction_survey: Optional[Survey] = None):
+        if self.nav.status != NavState.IN_ORBIT:
+            self.orbit()
         if extraction_survey is None:
             j = self.post("extract")
         else:
@@ -181,6 +189,8 @@ class Ship(SpaceTradersEntity):
         )
 
     def siphon(self):
+        if self.nav.status != NavState.IN_ORBIT:
+            self.orbit()
         j = self.post("siphon")
         self.update(j["data"])
         return Item(
@@ -189,6 +199,8 @@ class Ship(SpaceTradersEntity):
         )
 
     def refuel(self, from_cargo=False, units=None):
+        if self.nav.status != NavState.DOCKED:
+            self.dock()
         if units is None:
             j = self.post("refuel", data={"fromCargo": from_cargo})
         else:
@@ -197,11 +209,15 @@ class Ship(SpaceTradersEntity):
         return MarketTransaction(j["data"]["transaction"])
 
     def sell(self, cargo_symbol: str, quantity: int):
+        if self.nav.status != NavState.DOCKED:
+            self.dock()
         j = self.post("sell", data={"symbol": cargo_symbol, "units": quantity})
         self.update(j["data"])
         return MarketTransaction(j["data"]["transaction"])
 
     def buy(self, cargo_symbol: str, quantity: int):
+        if self.nav.status != NavState.DOCKED:
+            self.dock()
         j = self.post("purchase", data={"symbol": cargo_symbol, "units": quantity})
         self.update(j["data"])
         return MarketTransaction(j["data"]["transaction"])
@@ -279,11 +295,15 @@ class Ship(SpaceTradersEntity):
         return ships
 
     def install_mount(self, mount_symbol: str):
+        if self.nav.status != NavState.DOCKED:
+            self.dock()
         j = self.post("mounts/install", data={"symbol": mount_symbol})
         self.update(j["data"])
         return ShipyardTransaction(j["data"]["transaction"])
 
     def remove_mount(self, mount_symbol: str):
+        if self.nav.status != NavState.DOCKED:
+            self.dock()
         j = self.post("mounts/remove", data={"symbol": mount_symbol})
         self.update(j["data"])
         return ShipyardTransaction(j["data"]["transaction"])
