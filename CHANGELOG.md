@@ -1,3 +1,11 @@
+# v2.4.0
+
+- API burst limit now is used by the AutoTradersSession
+- Helper functions now use the right multipliers as announced in the wiki
+- Added extra check for those actions of a ship that require it to be either IN_ORBIT or DOCKED, so the proper action is called before the former
+- Fix bug that would lead to wrong times being slept when waiting for cooldowns or transits
+- Fix bug that would not correctly iterate over all available pages in a PaginatedList result
+
 # v2.3.4
 
 - Fix issue with Contract deliver endpoint not able to return the right… by @Rsilnav in #14
